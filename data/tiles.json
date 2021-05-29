@@ -1,0 +1,182 @@
+{
+    "a": [
+        ["start", 2], ["start", 2], ["start", 2], ["start", 2], ["start", 2], ["normal", 2]
+    ],
+    "A": [
+        ["start", 2], ["start", 2], ["start", 2], ["start", 2], ["normal", 2], ["normal", 2]
+    ],
+    "b": [
+        ["normal", 2], ["normal", 2], ["normal", 2], ["normal", 2], ["normal", 2], ["normal", 2]
+    ],
+    "B": [
+        ["downhill", 2], ["downhill", 2], ["downhill", 2], ["downhill", 2], ["normal", 2], ["normal", 2]
+    ],
+    "c": [
+        ["normal", 2], ["normal", 2], ["normal", 2], ["normal", 2], ["normal", 2], ["normal", 2]
+    ],
+    "C": [
+        ["normal", 2], ["normal", 2], ["normal", 2], ["uphill", 2], ["uphill", 2], ["uphill", 2]
+    ],
+    "d": [
+        ["normal", 2], ["normal", 2], ["normal", 2], ["normal", 2], ["normal", 2], ["normal", 2]
+    ],
+    "D": [
+        ["uphill", 2], ["uphill", 2], ["uphill", 2], ["uphill", 2], ["uphill", 2], ["downhill", 2]
+    ],
+    "e": [
+        ["normal", 2], ["normal", 2]
+    ],
+    "E": [
+        ["uphill", 2], ["uphill", 2]
+    ],
+    "f": [
+        ["normal", 2], ["normal", 2], ["normal", 2], ["normal", 2], ["normal", 2], ["normal", 2]
+    ],
+    "F": [
+        ["downhill", 2], ["downhill", 2], ["downhill", 2], ["normal", 2], ["normal", 2], ["normal", 2]
+    ],
+    "g": [
+        ["normal", 2], ["normal", 2]
+    ],
+    "G": [
+        ["uphill", 2], ["uphill", 2]
+    ],
+    "h": [
+        ["normal", 2], ["normal", 2]
+    ],
+    "H": [
+        ["downhill", 2], ["downhill", 2]
+    ],
+    "i": [
+        ["normal", 2], ["normal", 2]
+    ],
+    "I": [
+        ["normal", 2], ["normal", 2]
+    ],
+    "j": [
+        ["normal", 2], ["normal", 2]
+    ],
+    "J": [
+        ["normal", 2], ["normal", 2]
+    ],
+    "k": [
+        ["normal", 2], ["normal", 2]
+    ],
+    "K": [
+        ["uphill", 2], ["uphill", 2]
+    ],
+    "l": [
+        ["normal", 2], ["normal", 2], ["normal", 2], ["normal", 2], ["normal", 2], ["normal", 2]
+    ],
+    "L": [
+        ["uphill", 2], ["uphill", 2], ["uphill", 2], ["downhill", 2], ["downhill", 2], ["downhill", 2]
+    ],
+    "m": [
+        ["normal", 2], ["normal", 2], ["normal", 2], ["normal", 2], ["normal", 2], ["normal", 2]
+    ],
+    "M": [
+        ["normal", 2], ["normal", 2], ["uphill", 2], ["uphill", 2], ["uphill", 2], ["uphill", 2]
+    ],
+    "n": [
+        ["normal", 2], ["normal", 2], ["normal", 2], ["normal", 2], ["normal", 2], ["normal", 2]
+    ],
+    "N": [
+        ["uphill", 2], ["uphill", 2], ["uphill", 2], ["uphill", 2], ["uphill", 2], ["uphill", 2]
+    ],
+    "o": [
+        ["normal", 2], ["normal", 2]
+    ],
+    "O": [
+        ["uphill", 2], ["uphill", 2]
+    ],
+    "p": [
+        ["normal", 2], ["normal", 2]
+    ],
+    "P": [
+        ["downhill", 2], ["downhill", 2]
+    ],
+    "q": [
+        ["normal", 2], ["normal", 2]
+    ],
+    "Q": [
+        ["uphill", 2], ["uphill", 2]
+    ],
+    "r": [
+        ["normal", 2], ["normal", 2]
+    ],
+    "R": [
+        ["uphill", 2], ["uphill", 2]
+    ],
+    "s": [
+        ["normal", 2], ["normal", 2]
+    ],
+    "S": [
+        ["normal", 2], ["normal", 2]
+    ],
+    "t": [
+        ["normal", 2], ["normal", 2]
+    ],
+    "T": [
+        ["normal", 2], ["normal", 2]
+    ],
+    "u": [
+        ["normal", 2], ["finish", 2], ["finish", 2], ["finish", 2], ["finish", 2], ["finish", 2]
+    ],
+    "U": [
+        ["uphill", 2], ["uphill", 2], ["finish", 2], ["finish", 2], ["finish", 2], ["finish", 2]
+    ],
+    "1a": [
+        ["start", 3], ["start", 3], ["start", 3], ["normal", 3], ["normal", 3], ["normal", 3]
+    ],
+    "1b": [
+        ["start", 3], ["start", 3], ["start", 3], ["start", 3], ["normal", 3], ["normal", 3]
+    ],
+    "2a": [
+        ["normal", 3], ["normal", 3], ["normal", 3], ["breakaway", 3], ["normal", 3], ["normal", 2]
+    ],
+    "2b": [
+        ["normal", 2], ["normal", 2], ["normal", 2], ["breakaway", 2], ["normal", 2], ["normal", 2]
+    ],
+    "3a": [
+        ["supply", 3], ["supply", 3], ["supply", 3], ["supply", 3], ["supply", 3], ["normal", 2]
+    ],
+    "3b": [
+        ["normal", 2], ["normal", 2], ["cobble", 1], ["cobble", 1], ["cobble", 2], ["cobble", 1]
+    ],
+    "4a": [
+        ["supply", 3], ["supply", 3], ["supply", 3], ["supply", 3], ["supply", 3], ["normal", 2]
+    ],
+    "4b": [
+        ["cobble", 1], ["cobble", 2], ["cobble", 1], ["cobble", 1], ["normal", 2], ["normal", 2]
+    ],
+    "5a": [
+        ["cobble", 1], ["cobble", 2], ["cobble", 1], ["cobble", 2], ["cobble", 1], ["cobble", 1]
+    ],
+    "5b": [
+        ["cobble", 1], ["cobble", 1], ["normal", 2], ["normal", 2], ["normal", 2], ["normal", 2]
+    ],
+    "6a": [
+        ["cobble", 1], ["cobble", 1], ["cobble", 2], ["cobble", 1], ["cobble", 1], ["cobble", 1]
+    ],
+    "6b": [
+        ["cobble", 1], ["cobble", 1], ["cobble", 1], ["cobble", 2], ["cobble", 1], ["normal", 2]
+    ],
+    "7a": [
+        ["normal", 2], ["normal", 2], ["cobble", 1], ["cobble", 1], ["cobble", 2], ["cobble", 1]
+    ],
+    "7b": [
+        ["cobble", 1], ["cobble", 2], ["cobble", 1], ["normal", 2], ["normal", 2], ["normal", 2]
+    ],
+    "8a": [
+        ["normal", 2], ["normal", 2], ["normal", 2], ["cobble", 1], ["cobble", 2], ["cobble", 1]
+    ],
+    "8b": [
+        ["cobble", 1], ["cobble", 1], ["cobble", 2], ["cobble", 1], ["cobble", 1], ["normal", 2]
+    ],
+    "9a": [
+        ["supply", 3], ["supply", 3], ["normal", 2]
+    ],
+    "9b": [
+        ["normal", 3], ["normal", 3], ["normal", 2]
+    ]
+}
