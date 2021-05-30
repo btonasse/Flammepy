@@ -70,8 +70,9 @@ class Course():
         for tile in self.tiles:
             self.spaces.extend(tile.spaces)
 
-        # Initialize players
+        # Initialize players and riders lists
         self.players = []
+        self.riders = []
 
     def addPlayer(self, color: str) -> 'Player':
         # Check if max players reached
@@ -80,11 +81,22 @@ class Course():
         # Check if color already exists
         if next((player for player in self.players if player.color == color), None):
             raise ValueError(f'A player with color {color} already exists.')
-        # Add player to list and return it
+        # Create player, object and add to list
         new_player = Player(color)
         self.players.append(new_player)
+        # Add riders to list
+        self.riders.append(new_player.sprinteur)
+        self.riders.append(new_player.rouleur)
         return new_player
 
+    def _sortRiders(self) -> None:
+        '''
+        Sorts every rider by position
+        '''
+        # Subspace criteria is negative because it can't be reversed
+        self.riders.sort(key=lambda x: (x.location[0], -x.location[1]), reverse=True)
+        
+    
     def _placeRider(self, rider: 'Rider', target: int) -> list:
         '''
         Places a rider in a space, given the space index (and the index of the subspace)
@@ -108,6 +120,7 @@ class Course():
                 rider.location = [target, i] # Update rider's location attribute
                 if origin[0] != -1: # Erase current location (but not if being placed for first time)
                     self._updateSpace(origin)
+                self._sortRiders() # Sort the list of riders by position
                 return rider.location
         # Try to place it in next available space
         return self._placeRider(rider, target-1)
@@ -136,6 +149,7 @@ class Course():
         # Get target index (limited by size of the course)
         target = min(origin + delta, len(self.spaces)-1)
         
+        # Place rider in new location and update all spaces and sort self.riders
         new_location = self._placeRider(rider, target)
         return new_location
 
@@ -291,7 +305,10 @@ def main():
         print(i, s.type, s.riders, p1.sprinteur in s.riders)
         if p1.sprinteur in s.riders:
             break
-
+    
+    print('')
+    for i, rider in enumerate(course.riders):
+        print(i, rider, rider.color, rider.type)
     
 
 
