@@ -181,7 +181,6 @@ class Course():
                 if any_rider_moved:
                     return self._applySlip()
 
-
     def _getPelotons(self, pelotons: dict = {}, begin_at: int = 0) -> dict:
         '''
         Recursively build a dictionary of pelotons
@@ -214,6 +213,22 @@ class Course():
                 pelotons[(start,end)] = peloton
                 return self._getPelotons(pelotons, end+2)
         return pelotons
+    
+    def _applyExhaustion(self) -> None:
+        '''
+        Iterate through riders and give them exhaustion cards if subspace ahead is empty
+        '''
+        for rider in self.riders:
+            # Get space and subspace indexes
+            space, subspace = rider.location[0], rider.location[1]
+            # Check if there is a space ahead
+            if space+1 <= len(self.spaces)-1:
+                # Get subspace ahead. Account for a smaller space ahead
+                subspace_ahead = min(subspace, len(self.spaces[space+1].riders)-1)
+                # Check if that space is empty
+                if not self.spaces[space+1].riders[subspace_ahead]:
+                    rider.drawExhaustion()
+
 
 class Player():
     def __init__(self, color: str) -> None:
@@ -279,11 +294,18 @@ class Rider():
         '''
         if self.hand[card_index] == -1: # Exhaustion card
             value = 2
+            self.hand.pop(card_index) # Remove card from the game
         else:
             value = self.hand[card_index]
         # Discard the whole hand
         self.discard_deck, self.hand = self.hand[:], []
         return value
+
+    def drawExhaustion(self) -> None:
+        '''
+        Add an exhaustion card (represented by a -1) to hand
+        '''
+        self.discard_deck.append(-1)
 
 def main():
     course = Course('La Classicissima', '2-4')
@@ -300,6 +322,7 @@ def main():
 
     course.moveRider(p1.sprinteur, 3)
     course._applySlip()
+    course._applyExhaustion()
     print('')
     for i, s in enumerate(course.spaces):
         print(i, s.type, s.riders, p1.sprinteur in s.riders)
@@ -308,8 +331,9 @@ def main():
     
     print('')
     for i, rider in enumerate(course.riders):
-        print(i, rider, rider.color, rider.type)
+        print(i, rider, rider.color, rider.type, rider.location, rider.hand)
     
+
 
 
 if __name__ == '__main__':
