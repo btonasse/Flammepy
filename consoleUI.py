@@ -11,6 +11,53 @@ class App():
         # Series of prompts to set up the game
         self.setUp()
 
+        # Game loop (todo)
+
+    def drawCourse(self) -> str: 
+        '''
+        Build a string representation of the board state (as a straight line)
+        Use three lines (one for each potential lane)
+        '''
+        fg.black = fg.darkgray
+        first_line = second_line = third_line =  '>'
+        for i, space in enumerate(self.course.spaces):
+            if space.type == 'uphill':
+                sq = ' ' + fg.red + '|' + fx.default
+            elif space.type == 'downhill':
+                sq = ' ' + fg.blue + '|' + fx.default
+            elif space.type == 'cobble':
+                sq = ' ' + fg.yellowgreen + '|' + fx.default
+            elif space.type == 'supply':
+                sq = ' ' + fg.cyan + '|' + fx.default
+            elif space.type in ['start', 'finish']:
+                sq = ' ' + fg.yellow + '|' + fx.default
+            else:
+                sq = ' ' + fx.default + '|'
+            
+            if len(space.riders) == 3:
+                if space.riders[2]:
+                    first_line += sq.replace(' ', getattr(fg, space.riders[2].color) + space.riders[2].type[0])
+                else:
+                    first_line += sq
+            else:
+                first_line += '  '
+
+            if len(space.riders) >= 2:
+                if space.riders[1]:
+                    second_line += sq.replace(' ', getattr(fg, space.riders[1].color) + space.riders[1].type[0])
+                else:
+                    second_line += sq
+            else:
+                second_line += '  '
+
+            if space.riders[0]:
+                third_line += sq.replace(' ', getattr(fg, space.riders[0].color) + space.riders[0].type[0])
+            else:
+                third_line += sq
+
+        final_string = '\n'.join([first_line, second_line, third_line])
+        return final_string
+    
     def _choosePlayerCount(self) -> int:
         '''
         Get player count from user
@@ -140,6 +187,9 @@ def main():
     app = App()
     for player in app.course.players:
         print(player.__dict__)
+    for rider in app.course.riders:
+        app.course._placeRider(rider, 4)
+    print(app.drawCourse())
     input('')
 
 if __name__ == '__main__':
