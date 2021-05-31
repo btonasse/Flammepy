@@ -4,6 +4,9 @@ from console import fg, bg, fx
 import json
 from typing import Union
 
+# Make black color readable on console
+fg.black = fg.darkgray
+
 class App():
     player_colors = ['blue', 'green', 'red', 'pink', 'white', 'black']
     exit_prompt = 'Press Enter to quit...'
@@ -18,7 +21,6 @@ class App():
         Build a string representation of the board state (as a straight line)
         Use three lines (one for each potential lane)
         '''
-        fg.black = fg.darkgray
         first_line = second_line = third_line =  '>'
         for i, space in enumerate(self.course.spaces):
             if space.type == 'uphill':
@@ -29,6 +31,8 @@ class App():
                 sq = ' ' + fg.yellowgreen + '|' + fx.default
             elif space.type == 'supply':
                 sq = ' ' + fg.cyan + '|' + fx.default
+            #elif space.type == 'breakaway': # Need to implement breakaway color so that not all lanes are colored
+            #    sq = ' ' + fg.goldenrod + '|' + fx.default  
             elif space.type in ['start', 'finish']:
                 sq = ' ' + fg.yellow + '|' + fx.default
             else:
@@ -55,7 +59,11 @@ class App():
             else:
                 third_line += sq
 
-        final_string = '\n'.join([first_line, second_line, third_line])
+        border = '#'*(len(self.course.spaces)*2+1)
+        if not first_line.count('|'): # No spaces have three lanes. No need to draw first line.
+            final_string = '\n'.join([border, second_line, third_line, border])    
+        else:
+            final_string = '\n'.join([border, first_line, second_line, third_line, border])
         return final_string
     
     def _choosePlayerCount(self) -> int:
@@ -63,7 +71,7 @@ class App():
         Get player count from user
         '''
         player_count = getInput('How many players (or [q]uit)?', '23456', 'q')
-        if not player_count:
+        if player_count == False:
             input(self.exit_prompt)
             exit()
         else:
@@ -90,7 +98,7 @@ class App():
             print(str(i+1) + ' - ' + course)
         # Prompt user for a choice
         chosen_course = getInput('Choose one of the courses above:', choices, 'q')
-        if not chosen_course:
+        if chosen_course == False:
             input(self.exit_prompt)
             exit()
         else:
@@ -121,7 +129,7 @@ class App():
             # Get list of valid choices
             valid_choices = [str(i+1) for i in range(len(self.player_colors)) if i not in selected]
             selected_index = getInput(f'Player {len(selected)+1}, select a color above:', valid_choices, 'q')
-            if not selected_index:
+            if selected_index == False:
                 input(self.exit_prompt)
                 exit()
             else:
@@ -132,15 +140,143 @@ class App():
                 self.course.addPlayer(selected_color)
 
     def setUp(self) -> None:
-        # Set player count
+        '''
+        Initializing function to set up the game board.
+        '''
+        # Ask for input and set player count
         self.player_count = self._choosePlayerCount()
-                
-        # Choose course
+        # Ask for input and choose course
         self.course = self._chooseCourse()
-
         # Add players
         self._addPlayers()
 
+    def _initialPlacement(self) -> None:
+        '''
+        Gets input from players to place their riders behind the start line
+        '''
+        #riders_left = {player.color: [player.sprinteur, player.rouleur] for player in self.course.players}
+        valid_start_pos = [str(self.course.spaces.index(space)) for space in self.course.spaces if space.type in ['start', 'breakaway']]
+        for player in self.course.players:
+            for rider in [player.sprinteur, player.rouleur]:
+                print(self.drawCourse())
+                start_pos = getInput(f'Player {player.color}, place your {rider.type}: ', valid_start_pos, 'q', color=player.color)
+                if start_pos == False:
+                    input(self.exit_prompt)
+                    exit()
+                self.course._placeRider(rider, int(start_pos))
+
+    def _cardSelectionRounds(self) -> dict:
+        '''
+        Have each player select one rider ande play one card.
+        Return a dictionary with riders as keys and movement values as values.
+        '''
+        # Initialize dict of riders and played cards
+        riders_and_cards = {player: {player.sprinteur: None, player.rouleur: None} for player in self.course.players}
+        # Initialize string representation of cards played after first round
+        cards_played_so_far = []
+        for i in range(2):
+            for player in self.course.players:
+                # Print board
+                print(self.drawCourse())
+                # First round, the players needs to select one of their riders
+                if i == 0:
+                    rider_selected = self.selectRider(player)
+                # Otherwise, pick whatever rider is left
+                else:
+                    rider_selected = list(riders_and_cards[player].keys())[list(riders_and_cards[player].values()).index(None)]
+                    print('Cards played so far: ', ' | '.join(cards_played_so_far), sep='')
+                # Select a card (return card index in rider's hand)
+                card_index = self.selectCard(rider_selected)
+                # Build string representation of rider and his played card
+                if i == 0:
+                    rider_as_str = _colorWrapper(rider_selected.type, rider_selected.color)
+                    if rider_selected.hand[card_index] == -1:
+                        card_as_str = 'E'    
+                    else:
+                        card_as_str = str(rider_selected.hand[card_index])
+                    cards_played_so_far.append(rider_as_str + ': ' + card_as_str)
+                # Play the card and assign its move value to return variable
+                move_value = rider_selected.playCard(card_index)
+                riders_and_cards[player][rider_selected] = move_value
+
+        # Flatten dictionary to get k=rider, v=move_value (player is irrelevant when moving the rider)
+        riders_and_cards = {rider: value for dic in riders_and_cards.values() for rider, value in dic.items()}
+        return riders_and_cards
+
+
+
+    def gameLoop(self) -> None:
+        '''
+        Main game loop
+        '''
+        print(f'The race is about to begin! Course: {self.course.name}')
+        # Initial placement of riders
+        self._initialPlacement()
+        
+        # Initialize turn counter
+        turn = 1
+        while True:
+            print(_colorWrapper(f'Starting turn {turn}...', 'lightsalmon'))
+            # Card selection and play loop
+            played_cards = self._cardSelectionRounds()
+
+            # Move riders in order and get string representation of played cards
+            played_cards_as_str = []
+            for rider in self.course.riders:
+                delta = played_cards[rider]
+                self.course.moveRider(rider, delta)
+                played_cards_as_str.append(_colorWrapper(rider.type, rider.color) + ': ' + str(delta))
+
+            # Redraw board and wait for Enter to apply slipstream
+            print('Movement this turn: ', ' | '.join(played_cards_as_str))
+            print(self.drawCourse())
+            input(_colorWrapper('Riders have moved! Press Enter to apply slipstream...', 'lightsalmon'))
+
+            # Apply slipstream
+            self.course._applySlip()
+            print(self.drawCourse())
+            input(_colorWrapper('Slipstream applied! Press Enter to apply exhaustion...', 'lightsalmon'))
+            
+            # Apply exhaustion
+            self.course._applyExhaustion()
+            # Build string representation of riders that had exhaustion applied
+            exhausted_as_str = []
+            for rider in self.course.riders:
+                if rider.discard_deck[-1] == -1:
+                    exhausted_as_str.append(_colorWrapper(rider.type, rider.color))
+                # Draw cards again
+                rider.drawCards()
+            print('These riders are getting tired: ' + ', '.join(exhausted_as_str) + '. Press Enter to start next turn...', end='')
+            input('')
+
+            
+
+            #Check if game over -todo
+            turn += 1
+
+
+            
+    def selectRider(self, player: 'Player') -> 'Rider':
+        rider_selected = getInput(f'Player {player.color}, select a rider: [s]printeur or [r]ouleur? ', 'sr', 'q', color=player.color)
+        if rider_selected == False:
+            input(self.exit_prompt)
+            exit()
+        if rider_selected == 's':
+            return player.sprinteur
+        else:
+            return player.rouleur
+
+    def selectCard(self, rider: 'Rider') -> int:
+        # Generate printable list of cards in hand to play (convert -1 to E for exhaustion cards)
+        hand = [str(i+1) + ': ' + _colorWrapper('E', rider.color) if card==-1 else str(i+1) + ': ' + _colorWrapper(str(card), rider.color) for i, card in enumerate(rider.hand)]
+        print('\n'.join(hand))
+        # Get list of valid indexes
+        valid_indexes = [str(i+1) for i in range(len(hand))]
+        card_selected = getInput(f'Hey, {rider.color} {rider.type}, select one of the cards above to play: ', valid_indexes, 'q', color=rider.color)
+        if card_selected == False:
+            input(self.exit_prompt)
+            exit()
+        return int(card_selected)-1
 
 def _colorWrapper(text: str, fg_color: str = '', bg_color: str = '') -> str:
     '''
@@ -185,11 +321,12 @@ def getInput(text: str, valids: Union[list, str], quit: str, color: str = 'light
 
 def main():
     app = App()
-    for player in app.course.players:
-        print(player.__dict__)
-    for rider in app.course.riders:
-        app.course._placeRider(rider, 4)
-    print(app.drawCourse())
+    #for player in app.course.players:
+    #    print(player.__dict__)
+    #for rider in app.course.riders:
+    #    app.course._placeRider(rider, 4)
+    #print(app.drawCourse())
+    app.gameLoop()
     input('')
 
 if __name__ == '__main__':
