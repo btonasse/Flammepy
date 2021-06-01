@@ -217,7 +217,7 @@ class App():
         '''
         Checks if at least all but one rider already finished the race
         '''
-        if len(self.course.final_positions) >= len(self.course.riders):
+        if len(self.course.final_positions) >= len(self.course.riders)-1:
             return True
         else:
             return False
