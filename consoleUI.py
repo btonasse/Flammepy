@@ -156,16 +156,21 @@ class App():
         '''
         Gets input from players to place their riders behind the start line
         '''
-        #riders_left = {player.color: [player.sprinteur, player.rouleur] for player in self.course.players}
         valid_start_pos = [str(self.course.spaces.index(space)) for space in self.course.spaces if space.type in ['start', 'breakaway']]
         for player in self.course.players:
             for rider in [player.sprinteur, player.rouleur]:
                 print(self.drawCourse())
+                print('Valid positions: ', ' | '.join(valid_start_pos))
                 start_pos = getInput(f'Player {player.color}, place your {rider.type}: ', valid_start_pos, 'q', color=player.color)
                 if start_pos == False:
                     input(self.exit_prompt)
                     exit()
                 self.course._placeRider(rider, int(start_pos))
+                # If bemove breakaway position selected, remove it from list.
+                # Otherwise when selecting an already taken position, riders will just be placed on the next available lane or space
+                if start_pos == '9':
+                    if sum(isinstance(x, Rider) for x in self.course.spaces[9].riders) == len(self.course.spaces[9].riders)-1:
+                        valid_start_pos.remove('9')
 
     def _cardSelectionRounds(self) -> dict:
         '''
