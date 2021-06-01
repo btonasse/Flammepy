@@ -201,15 +201,18 @@ class Course():
             at_least_one_rider_found = False
             
             # Iterate through each subspace to search for riders
-            # For slipstreaming each peloton is considered from back to front, but each rider has to be moved in order
-            # Hence the need to insert at the end of the list
+            riders_on_this_space = []
             for rider in self.spaces[i].riders: 
                 if rider is not None:
-                    peloton.insert(-1, rider)
+                    riders_on_this_space.append(rider)
                     at_least_one_rider_found = True
                     # If first rider was found, set start index to this index
                     if not start:
                         start = i
+            # For slipstreaming each peloton is considered from back to front, but each rider has to be moved in order
+            # Hence the need to insert at the beginning of the list
+            peloton = riders_on_this_space + peloton
+            
             # If a peloton was found and we reached and empty space, set previous space as end index
             # Call function again to find next peloton
             if peloton and not at_least_one_rider_found:
