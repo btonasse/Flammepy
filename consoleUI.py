@@ -1,4 +1,5 @@
 # Console interface
+from sys import is_finalizing
 from main import Course, Tile, Space, Player, Rider
 from console import fg, bg, fx
 import json
@@ -224,14 +225,17 @@ class App():
 
     def _checkFinish(self, rider: 'Rider') -> bool:
         '''
-        Loops through all riders and check if they have crossed the finish line.
-        Add them in order to self.course.final_positions
+        Check if rider crossed the finish line.
+        Add them to self.course.final_positions
+        And remove them from the board space (todo - check if this will break the loop)
         '''
         # Get rider space index
         rider_location = rider.location[0]
         if self.course.spaces[rider_location].type == 'finish':
-            if rider not in self.course.final_positions:
+            if rider not in [r[0] for r in self.course.final_positions]:
                 self.course.final_positions.append([rider, self.turn])
+                # Remove rider from the board
+                self.course.spaces[rider_location].riders[rider.location[1]] = None
             return True
         else:
             return False
@@ -244,8 +248,9 @@ class App():
         '''
         print(f'The race is about to begin! Course: {self.course.name}')
         # Initial placement of riders
-        self._initialPlacement()
-        
+        #self._initialPlacement()
+        for rider in self.course.riders:
+            self.course._placeRider(rider, 66)
         # Initialize turn counter (is an instance variable so we can know on which turn each rider finishes)
         self.turn = 1
         while True:
@@ -269,20 +274,14 @@ class App():
             # Apply slipstream
             self.course._applySlip()
             print(self.drawCourse())
-            input(_colorWrapper('Slipstream applied! Press Enter to apply exhaustion...', 'lightsalmon'))
-            
-            # Apply exhaustion
-            # And build string representation of riders that had exhaustion applied
-            exhausted_as_str = []
-            for rider in self.course.riders:
-                is_exhausted = self.course._applyExhaustion(rider)
-                if is_exhausted:
-                    exhausted_as_str.append(_colorWrapper(rider.type, rider.color))
-                # Draw cards again
-                rider.drawCards()
-            print('These riders are getting tired: ' + ', '.join(exhausted_as_str) + '. Press Enter to start next turn...', end='')
-            input('')
+            input(_colorWrapper('Slipstream applied! Press Enter to continue...', 'lightsalmon'))
 
+            # Check if riders are finished already
+            for rider in self.course.riders:
+                is_finished = self._checkFinish(rider)
+                if is_finished:
+                    continue
+            
             #Check if game over
             game_ended = self._checkEndGame()
             if game_ended:
@@ -299,6 +298,19 @@ class App():
                 final_string = ' | '.join(final_positions_as_str) + '\n' + 'Riders that did not finish: ' + ', '.join(not_finished_as_str)
                 input(final_string)
                 return self.course.final_positions
+
+            # If game not over, apply exhaustion
+            # And build string representation of riders that had exhaustion applied
+            exhausted_as_str = []
+            for rider in self.course.riders:
+                is_exhausted = self.course._applyExhaustion(rider)
+                if is_exhausted:
+                    exhausted_as_str.append(_colorWrapper(rider.type, rider.color))
+                
+                # Draw cards again
+                rider.drawCards()
+            print('These riders are getting tired: ' + ', '.join(exhausted_as_str) + '. Press Enter to start next turn...', end='')
+            input('')
 
             self.turn += 1
 
