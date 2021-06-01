@@ -297,6 +297,7 @@ class App():
                     if rider not in [r[0] for r in self.course.final_positions]:
                         not_finished_as_str.append(_colorWrapper(rider.type, rider.color))
                 final_string = ' | '.join(final_positions_as_str) + '\n' + 'Riders that did not finish: ' + ', '.join(not_finished_as_str)
+                input(final_string)
                 return self.course.final_positions
 
             self.turn += 1
