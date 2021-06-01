@@ -16,7 +16,7 @@ class Space():
         self.riders = [None for _ in range(size)]
         self.type = typ
         self.max_pw = 9
-        self.min_pw = 1 # Has to be one to account for slipstream
+        self.min_pw = 2
         self.slip = True
         self.start = False
         self.finish = False
@@ -147,8 +147,9 @@ class Course():
         '''
         # Get rider location index
         origin = rider.location[0]
-        # Modify delta if location has speed min/max
-        delta = max(self.spaces[origin].min_pw, min(self.spaces[origin].max_pw, delta))
+        # Modify delta if location has speed min/max (but not if slipstreaming)
+        if delta != 1:
+            delta = max(self.spaces[origin].min_pw, min(self.spaces[origin].max_pw, delta))
         # Get target index (limited by size of the course)
         target = min(origin + delta, len(self.spaces)-1)
         
@@ -297,9 +298,10 @@ class Rider():
         '''
         if self.hand[card_index] == -1: # Exhaustion card
             value = 2
-            self.hand.pop(card_index) # Remove card from the game
         else:
             value = self.hand[card_index]
+        # Remove card from the game
+        self.hand.pop(card_index)
         # Discard the whole hand
         self.discard_deck, self.hand = self.hand[:], []
         return value

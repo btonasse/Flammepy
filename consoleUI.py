@@ -168,7 +168,7 @@ class App():
                 self.course._placeRider(rider, int(start_pos))
                 # If bemove breakaway position selected, remove it from list.
                 # Otherwise when selecting an already taken position, riders will just be placed on the next available lane or space
-                if start_pos == '9':
+                if start_pos == '9': # Breakaway tiles are always on index 9 of the course
                     if sum(isinstance(x, Rider) for x in self.course.spaces[9].riders) == len(self.course.spaces[9].riders)-1:
                         valid_start_pos.remove('9')
 
@@ -178,38 +178,57 @@ class App():
         Return a dictionary with riders as keys and movement values as values.
         '''
         # Initialize dict of riders and played cards
-        riders_and_cards = {player: {player.sprinteur: None, player.rouleur: None} for player in self.course.players}
+        riders_and_cards = {rider: None for rider in self.course.riders}
         # Initialize string representation of cards played after first round
-        cards_played_so_far = []
+        cards_played_last_round = []
         for i in range(2):
             for player in self.course.players:
                 # Print board
                 print(self.drawCourse())
-                # First round, the players needs to select one of their riders
-                if i == 0:
-                    rider_selected = self.selectRider(player)
-                # Otherwise, pick whatever rider is left
-                else:
-                    rider_selected = list(riders_and_cards[player].keys())[list(riders_and_cards[player].values()).index(None)]
-                    print('Cards played so far: ', ' | '.join(cards_played_so_far), sep='')
+                
+                # Get rider selection
+                rider_selected = self.selectRider(player, riders_and_cards)
+                # If there are no riders left to select, skip to next player
+                if not rider_selected:
+                    continue
+                
+                # If on second round, display cards played so far before playing a card
+                if i == 1:
+                    print('Cards played so far: ', ' | '.join(cards_played_last_round), sep='')
                 # Select a card (return card index in rider's hand)
                 card_index = self.selectCard(rider_selected)
+                
                 # Build string representation of rider and his played card
-                if i == 0:
+                if i == 0: # Can't display cards as they are played during second round
                     rider_as_str = _colorWrapper(rider_selected.type, rider_selected.color)
-                    if rider_selected.hand[card_index] == -1:
+                    if rider_selected.hand[card_index] == -1: # Display an E instead of -1 for exhaustion cards
                         card_as_str = 'E'    
                     else:
                         card_as_str = str(rider_selected.hand[card_index])
-                    cards_played_so_far.append(rider_as_str + ': ' + card_as_str)
+                    cards_played_last_round.append(rider_as_str + ': ' + card_as_str)
+                
                 # Play the card and assign its move value to return variable
                 move_value = rider_selected.playCard(card_index)
-                riders_and_cards[player][rider_selected] = move_value
+                riders_and_cards[rider_selected] = move_value
 
-        # Flatten dictionary to get k=rider, v=move_value (player is irrelevant when moving the rider)
-        riders_and_cards = {rider: value for dic in riders_and_cards.values() for rider, value in dic.items()}
         return riders_and_cards
 
+    def _checkEndGame(self) -> bool:
+        pass
+
+    def _checkFinish(self, rider: 'Rider') -> bool:
+        '''
+        Loops through all riders and check if they have crossed the finish line.
+        Add them in order to self.course.final_positions
+        '''
+        # Get rider space index
+        rider_location = rider.location[0]
+        if self.course.spaces[rider_location].type == 'finish':
+            if rider not in self.course.final_positions:
+                self.course.final_positions.append(rider)
+            return True
+        else:
+            return False
 
 
     def gameLoop(self) -> None:
@@ -231,11 +250,12 @@ class App():
             played_cards_as_str = []
             for rider in self.course.riders:
                 delta = played_cards[rider]
-                self.course.moveRider(rider, delta)
-                played_cards_as_str.append(_colorWrapper(rider.type, rider.color) + ': ' + str(delta))
+                if delta: # If rider already finished, delta will be None
+                    self.course.moveRider(rider, delta)
+                    played_cards_as_str.append(_colorWrapper(rider.type, rider.color) + ': ' + str(delta))
 
             # Redraw board and wait for Enter to apply slipstream
-            print('Movement this turn: ', ' | '.join(played_cards_as_str))
+            print('Moved this turn (before inclination effects): ', ' | '.join(played_cards_as_str))
             print(self.drawCourse())
             input(_colorWrapper('Riders have moved! Press Enter to apply slipstream...', 'lightsalmon'))
 
@@ -261,17 +281,37 @@ class App():
             #Check if game over -todo
             turn += 1
 
-
             
-    def selectRider(self, player: 'Player') -> 'Rider':
-        rider_selected = getInput(f'Player {player.color}, select a rider: [s]printeur or [r]ouleur? ', 'sr', 'q', color=player.color)
-        if rider_selected == False:
-            input(self.exit_prompt)
-            exit()
-        if rider_selected == 's':
-            return player.sprinteur
+    def selectRider(self, player: 'Player', riders_and_cards: dict) -> Union['Rider', None]:
+        '''
+        If both riders can still be selected, get input from player.
+        Otherwise return the only selectable rider or None if both have already finished/been selected.
+        '''
+        # Initialize flags that determine whether each rider can be selected
+        selectable = {player.sprinteur: True, player.rouleur: True}
+        # Check if rider has already finished or has already been selected in a previous round
+        for rider in selectable.keys():
+            if self._checkFinish(rider) or riders_and_cards[rider]:
+                selectable[rider] = False
+        
+        # Only prompt player for input if both riders are selectable
+        if sum(selectable.values()) == 2:
+            rider_selected = getInput(f'Player {player.color}, select a rider: [s]printeur or [r]ouleur? ', 'sr', 'q', color=player.color)
+            if rider_selected == False:
+                input(self.exit_prompt)
+                exit()
+            if rider_selected == 's':
+                return player.sprinteur
+            else:
+                return player.rouleur
+        # Return whichever rider has not been selected yet
+        elif sum(selectable.values()) == 1:
+            return list(selectable.keys())[list(selectable.values()).index(True)]
+        # No riders can be selected
         else:
-            return player.rouleur
+            return None
+
+        
 
     def selectCard(self, rider: 'Rider') -> int:
         # Generate printable list of cards in hand to play (convert -1 to E for exhaustion cards)
