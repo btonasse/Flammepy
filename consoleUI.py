@@ -275,7 +275,7 @@ class App():
             # And build string representation of riders that had exhaustion applied
             exhausted_as_str = []
             for rider in self.course.riders:
-                is_exhausted = self.course._applyExhaustion()
+                is_exhausted = self.course._applyExhaustion(rider)
                 if is_exhausted:
                     exhausted_as_str.append(_colorWrapper(rider.type, rider.color))
                 # Draw cards again
