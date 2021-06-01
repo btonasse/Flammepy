@@ -214,7 +214,13 @@ class App():
         return riders_and_cards
 
     def _checkEndGame(self) -> bool:
-        pass
+        '''
+        Checks if at least all but one rider already finished the race
+        '''
+        if len(self.course.final_positions) >= len(self.course.riders):
+            return True
+        else:
+            return False
 
     def _checkFinish(self, rider: 'Rider') -> bool:
         '''
@@ -225,24 +231,25 @@ class App():
         rider_location = rider.location[0]
         if self.course.spaces[rider_location].type == 'finish':
             if rider not in self.course.final_positions:
-                self.course.final_positions.append(rider)
+                self.course.final_positions.append([rider, self.turn])
             return True
         else:
             return False
 
 
-    def gameLoop(self) -> None:
+    def gameLoop(self) -> list:
         '''
-        Main game loop
+        Main game loop.
+        Returns the final positions after race is over
         '''
         print(f'The race is about to begin! Course: {self.course.name}')
         # Initial placement of riders
         self._initialPlacement()
         
-        # Initialize turn counter
-        turn = 1
+        # Initialize turn counter (is an instance variable so we can know on which turn each rider finishes)
+        self.turn = 1
         while True:
-            print(_colorWrapper(f'Starting turn {turn}...', 'lightsalmon'))
+            print(_colorWrapper(f'Starting turn {self.turn}...', 'lightsalmon'))
             # Card selection and play loop
             played_cards = self._cardSelectionRounds()
 
@@ -265,21 +272,34 @@ class App():
             input(_colorWrapper('Slipstream applied! Press Enter to apply exhaustion...', 'lightsalmon'))
             
             # Apply exhaustion
-            self.course._applyExhaustion()
-            # Build string representation of riders that had exhaustion applied
+            # And build string representation of riders that had exhaustion applied
             exhausted_as_str = []
             for rider in self.course.riders:
-                if rider.discard_deck[-1] == -1:
+                is_exhausted = self.course._applyExhaustion()
+                if is_exhausted:
                     exhausted_as_str.append(_colorWrapper(rider.type, rider.color))
                 # Draw cards again
                 rider.drawCards()
             print('These riders are getting tired: ' + ', '.join(exhausted_as_str) + '. Press Enter to start next turn...', end='')
             input('')
 
-            
+            #Check if game over
+            game_ended = self._checkEndGame()
+            if game_ended:
+                input(_colorWrapper(f'The race is over on turn {self.turn}! Press Enter to see results... ', 'lightsalmon'))
+                # Build string representation of final positions
+                final_positions_as_str = []
+                for rider, turn in self.course.final_positions:
+                    final_positions_as_str.append(_colorWrapper(rider.type, rider.color) + ': turn ' + str(turn))
+                # Build string representation of riders that didn't finish
+                not_finished_as_str = []
+                for rider in self.course.riders:
+                    if rider not in [r[0] for r in self.course.final_positions]:
+                        not_finished_as_str.append(_colorWrapper(rider.type, rider.color))
+                final_string = ' | '.join(final_positions_as_str) + '\n' + 'Riders that did not finish: ' + ', '.join(not_finished_as_str)
+                return self.course.final_positions
 
-            #Check if game over -todo
-            turn += 1
+            self.turn += 1
 
             
     def selectRider(self, player: 'Player', riders_and_cards: dict) -> Union['Rider', None]:
@@ -368,11 +388,6 @@ def getInput(text: str, valids: Union[list, str], quit: str, color: str = 'light
 
 def main():
     app = App()
-    #for player in app.course.players:
-    #    print(player.__dict__)
-    #for rider in app.course.riders:
-    #    app.course._placeRider(rider, 4)
-    #print(app.drawCourse())
     app.gameLoop()
     input('')
 

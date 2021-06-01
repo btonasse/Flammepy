@@ -218,20 +218,21 @@ class Course():
                 return self._getPelotons(pelotons, end+2)
         return pelotons
     
-    def _applyExhaustion(self) -> None:
+    def _applyExhaustion(self, rider: 'Rider') -> bool:
         '''
-        Iterate through riders and give them exhaustion cards if subspace ahead is empty
+        Draw an exhaustion card if subspace ahead of the rider is empty
+        Return True if a card is drawn this way
         '''
-        for rider in self.riders:
-            # Get space and subspace indexes
-            space, subspace = rider.location[0], rider.location[1]
-            # Check if there is a space ahead
-            if space+1 <= len(self.spaces)-1:
-                # Get subspace ahead. Account for a smaller space ahead
-                subspace_ahead = min(subspace, len(self.spaces[space+1].riders)-1)
-                # Check if that space is empty
-                if not self.spaces[space+1].riders[subspace_ahead]:
-                    rider.drawExhaustion()
+        # Get space and subspace indexes
+        space, subspace = rider.location[0], rider.location[1]
+        # Check if there is a space ahead
+        if space+1 <= len(self.spaces)-1:
+            # Get subspace ahead. Account for a smaller space ahead
+            subspace_ahead = min(subspace, len(self.spaces[space+1].riders)-1)
+            # Check if that space is empty
+            if not self.spaces[space+1].riders[subspace_ahead]:
+                rider.drawExhaustion()
+                return True
 
 
 class Player():
@@ -303,7 +304,8 @@ class Rider():
         # Remove card from the game
         self.hand.pop(card_index)
         # Discard the whole hand
-        self.discard_deck, self.hand = self.hand[:], []
+        self.discard_deck.extend(self.hand)
+        self.hand = []
         return value
 
     def drawExhaustion(self) -> None:
