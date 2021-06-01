@@ -74,6 +74,9 @@ class Course():
         self.players = []
         self.riders = []
 
+        # Initialize final arrival positions
+        self.final_positions = []
+
     def addPlayer(self, color: str) -> 'Player':
         # Check if max players reached
         if len(self.players) == self.max_players:
