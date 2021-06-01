@@ -31,8 +31,6 @@ class App():
                 sq = ' ' + fg.yellowgreen + '|' + fx.default
             elif space.type == 'supply':
                 sq = ' ' + fg.cyan + '|' + fx.default
-            #elif space.type == 'breakaway': # Need to implement breakaway color so that not all lanes are colored
-            #    sq = ' ' + fg.goldenrod + '|' + fx.default  
             elif space.type in ['start', 'finish']:
                 sq = ' ' + fg.yellow + '|' + fx.default
             else:
@@ -47,6 +45,8 @@ class App():
                 first_line += '  '
 
             if len(space.riders) >= 2:
+                if space.type == 'breakaway' and len(space.riders) == 3: # Color breakaway lane
+                    sq = ' ' + fg.goldenrod + '|' + fx.default
                 if space.riders[1]:
                     second_line += sq.replace(' ', getattr(fg, space.riders[1].color) + space.riders[1].type[0])
                 else:
@@ -54,6 +54,8 @@ class App():
             else:
                 second_line += '  '
 
+            if space.type == 'breakaway': # Color breakaway lane
+                sq = ' ' + fg.goldenrod + '|' + fx.default
             if space.riders[0]:
                 third_line += sq.replace(' ', getattr(fg, space.riders[0].color) + space.riders[0].type[0])
             else:
