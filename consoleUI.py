@@ -226,16 +226,10 @@ class App():
     def _checkFinish(self, rider: 'Rider') -> bool:
         '''
         Check if rider crossed the finish line.
-        Add them to self.course.final_positions
-        And remove them from the board space (todo - check if this will break the loop)
         '''
         # Get rider space index
         rider_location = rider.location[0]
         if self.course.spaces[rider_location].type == 'finish':
-            if rider not in [r[0] for r in self.course.final_positions]:
-                self.course.final_positions.append([rider, self.turn])
-                # Remove rider from the board
-                self.course.spaces[rider_location].riders[rider.location[1]] = None
             return True
         else:
             return False
@@ -248,9 +242,8 @@ class App():
         '''
         print(f'The race is about to begin! Course: {self.course.name}')
         # Initial placement of riders
-        #self._initialPlacement()
-        for rider in self.course.riders:
-            self.course._placeRider(rider, 66)
+        self._initialPlacement()
+
         # Initialize turn counter (is an instance variable so we can know on which turn each rider finishes)
         self.turn = 1
         while True:
@@ -280,6 +273,10 @@ class App():
             for rider in self.course.riders:
                 is_finished = self._checkFinish(rider)
                 if is_finished:
+                    # If finished, add to final_positions and remove from board
+                    if rider not in [r[0] for r in self.course.final_positions]:
+                        self.course.final_positions.append([rider, self.turn])
+                        self.course.spaces[rider.location[0]].riders[rider.location[1]] = None
                     continue
             
             #Check if game over
