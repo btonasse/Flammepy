@@ -2,18 +2,18 @@ import random
 import json
 
 class Space():
+    '''
+    Typ[e] can be:
+        normal
+        uphill = max 5 + no slip)
+        downhill = min 5
+        cobble = no slip
+        supply = min 4
+        start/finish/breakaway (special tiles)
+    '''
     def __init__(self, tile: 'Tile', typ: str, size: int) -> None: 
-        '''
-        Typ[e] can be:
-            normal
-            uphill = max 5 + no slip)
-            downhill = min 5
-            cobble = no slip
-            supply = min 4
-            start/finish/breakaway (special tiles)
-        '''
         self.tile = tile # Parent tile
-        self.riders = [None for _ in range(size)]
+        self.lanes = [None for _ in range(size)]
         self.type = typ
         self.max_pw = 9
         self.min_pw = 2
@@ -96,13 +96,13 @@ class Course():
         '''
         Sorts every rider by position
         '''
-        # Subspace criteria is negative because it can't be reversed
+        # lane criteria is negative because it can't be reversed
         self.riders.sort(key=lambda x: (x.location[0], -x.location[1]), reverse=True)
         
     
     def _placeRider(self, rider: 'Rider', target: int) -> list:
         '''
-        Places a rider in a space, given the space index (and the index of the subspace)
+        Places a rider in a space, given the space index (and the index of the lane)
         If unsuccessful, recursevily try to place it in an earlier space
         Returns final location of rider
         '''
@@ -117,9 +117,9 @@ class Course():
             return rider.location
                 
         # Try to place it in target space
-        for i, subspace in enumerate(self.spaces[target].riders):
-            if not subspace: # Subspace empty. Place rider there.
-                self.spaces[target].riders[i] = rider
+        for i, lane in enumerate(self.spaces[target].lanes):
+            if not lane: # lane empty. Place rider there.
+                self.spaces[target].lanes[i] = rider
                 rider.location = [target, i] # Update rider's location attribute
                 if origin[0] != -1: # Erase current location (but not if being placed for first time)
                     self._updateSpace(origin)
@@ -133,12 +133,12 @@ class Course():
         Update a space after a rider moves out of it (i.e. erases rider from space and moves other to the right if needed)
         '''    
         # Erase reference to rider from target space
-        self.spaces[target[0]].riders[target[1]] = None
-        # Move any riders on same space to next available subspaces
-        for i, subspace in enumerate(self.spaces[target[0]].riders):
-            if subspace is not None:
-                subspace.location[1] -= 1 # Update Rider object
-                self.spaces[target[0]].riders[i-1], self.spaces[target[0]].riders[i] = self.spaces[target[0]].riders[i], None # Update Space object
+        self.spaces[target[0]].lanes[target[1]] = None
+        # Move any riders on same space to next available lanes
+        for i, lane in enumerate(self.spaces[target[0]].lanes):
+            if lane is not None:
+                lane.location[1] -= 1 # Update Rider object
+                self.spaces[target[0]].lanes[i-1], self.spaces[target[0]].lanes[i] = self.spaces[target[0]].lanes[i], None # Update Space object
 
     def moveRider(self, rider: 'Rider', delta: int) -> list:
         '''
@@ -153,7 +153,7 @@ class Course():
         # Get target index (limited by size of the course)
         target = min(origin + delta, len(self.spaces)-1)
         
-        # Place rider in new location and update all spaces and sort self.riders
+        # Place rider in new location and update all spaces and sort self.lanes
         new_location = self._placeRider(rider, target)
         return new_location
 
@@ -200,9 +200,9 @@ class Course():
             # Initialize variable that determines if a rider was found this space
             at_least_one_rider_found = False
             
-            # Iterate through each subspace to search for riders
+            # Iterate through each lane to search for riders
             riders_on_this_space = []
-            for rider in self.spaces[i].riders: 
+            for rider in self.spaces[i].lanes: 
                 if rider is not None:
                     riders_on_this_space.append(rider)
                     at_least_one_rider_found = True
@@ -223,17 +223,17 @@ class Course():
     
     def _applyExhaustion(self, rider: 'Rider') -> bool:
         '''
-        Draw an exhaustion card if subspace ahead of the rider is empty
+        Draw an exhaustion card if lane ahead of the rider is empty
         Return True if a card is drawn this way
         '''
-        # Get space and subspace indexes
-        space, subspace = rider.location[0], rider.location[1]
+        # Get space and lane indexes
+        space, lane = rider.location[0], rider.location[1]
         # Check if there is a space ahead
         if space+1 <= len(self.spaces)-1:
-            # Get subspace ahead. Account for a smaller space ahead
-            subspace_ahead = min(subspace, len(self.spaces[space+1].riders)-1)
+            # Get lane ahead. Account for a smaller space ahead
+            lane_ahead = min(lane, len(self.spaces[space+1].lanes)-1)
             # Check if that space is empty
-            if not self.spaces[space+1].riders[subspace_ahead]:
+            if not self.spaces[space+1].lanes[lane_ahead]:
                 rider.drawExhaustion()
                 return True
 
@@ -249,7 +249,7 @@ class Rider():
         self.player = player
         self.color = self.player.color
         self.type = typ
-        self.location: list['int'] = [-1, 0] # Track rider's location (space and subspace index)
+        self.location: list['int'] = [-1, 0] # Track rider's location (space and lane index)
         self.discard_deck = []
         self.draw_deck = self._buildDeck()
         self.hand = []
@@ -326,8 +326,8 @@ def main():
     course._placeRider(p2.sprinteur, 3)
 
     for i, s in enumerate(course.spaces):
-        print(i, s.type, s.riders, p1.sprinteur in s.riders)
-        if p1.sprinteur in s.riders:
+        print(i, s.type, s.lanes, p1.sprinteur in s.lanes)
+        if p1.sprinteur in s.lanes:
             break
 
     course.moveRider(p1.sprinteur, 3)
@@ -335,8 +335,8 @@ def main():
     course._applyExhaustion()
     print('')
     for i, s in enumerate(course.spaces):
-        print(i, s.type, s.riders, p1.sprinteur in s.riders)
-        if p1.sprinteur in s.riders:
+        print(i, s.type, s.lanes, p1.sprinteur in s.lanes)
+        if p1.sprinteur in s.lanes:
             break
     
     print('')

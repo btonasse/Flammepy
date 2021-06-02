@@ -37,19 +37,19 @@ class App():
             else:
                 sq = ' ' + fx.default + '|'
             
-            if len(space.riders) == 3:
-                if space.riders[2]:
-                    first_line += sq.replace(' ', getattr(fg, space.riders[2].color) + space.riders[2].type[0])
+            if len(space.lanes) == 3:
+                if space.lanes[2]:
+                    first_line += sq.replace(' ', getattr(fg, space.lanes[2].color) + space.lanes[2].type[0])
                 else:
                     first_line += sq
             else:
                 first_line += '  '
 
-            if len(space.riders) >= 2:
-                if space.type == 'breakaway' and len(space.riders) == 3: # Color breakaway lane
+            if len(space.lanes) >= 2:
+                if space.type == 'breakaway' and len(space.lanes) == 3: # Color breakaway lane
                     sq = ' ' + fg.goldenrod + '|' + fx.default
-                if space.riders[1]:
-                    second_line += sq.replace(' ', getattr(fg, space.riders[1].color) + space.riders[1].type[0])
+                if space.lanes[1]:
+                    second_line += sq.replace(' ', getattr(fg, space.lanes[1].color) + space.lanes[1].type[0])
                 else:
                     second_line += sq
             else:
@@ -57,8 +57,8 @@ class App():
 
             if space.type == 'breakaway': # Color breakaway lane
                 sq = ' ' + fg.goldenrod + '|' + fx.default
-            if space.riders[0]:
-                third_line += sq.replace(' ', getattr(fg, space.riders[0].color) + space.riders[0].type[0])
+            if space.lanes[0]:
+                third_line += sq.replace(' ', getattr(fg, space.lanes[0].color) + space.lanes[0].type[0])
             else:
                 third_line += sq
 
@@ -170,7 +170,7 @@ class App():
                 # If bemove breakaway position selected, remove it from list.
                 # Otherwise when selecting an already taken position, riders will just be placed on the next available lane or space
                 if start_pos == '9': # Breakaway tiles are always on index 9 of the course
-                    if sum(isinstance(x, Rider) for x in self.course.spaces[9].riders) == len(self.course.spaces[9].riders)-1:
+                    if sum(isinstance(x, Rider) for x in self.course.spaces[9].lanes) == len(self.course.spaces[9].lanes)-1:
                         valid_start_pos.remove('9')
 
     def _cardSelectionRounds(self) -> dict:
@@ -276,7 +276,7 @@ class App():
                     # If finished, add to final_positions and remove from board
                     if rider not in [r[0] for r in self.course.final_positions]:
                         self.course.final_positions.append([rider, self.turn])
-                        self.course.spaces[rider.location[0]].riders[rider.location[1]] = None
+                        self.course.spaces[rider.location[0]].lanes[rider.location[1]] = None
                     continue
             
             #Check if game over
