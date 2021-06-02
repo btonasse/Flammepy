@@ -1,6 +1,5 @@
 # Console interface
-from sys import is_finalizing
-from main import Course, Tile, Space, Player, Rider
+from main import Course, Player, Rider
 from console import fg, bg, fx
 import json
 from typing import Union
@@ -9,13 +8,13 @@ from typing import Union
 fg.black = fg.darkgray
 
 class App():
+    '''
+    Main class for IO and implementing the game loop
+    '''
     player_colors = ['blue', 'green', 'red', 'pink', 'white', 'black']
-    exit_prompt = 'Press Enter to quit...'
     def __init__(self) -> None:
         # Series of prompts to set up the game
         self.setUp()
-
-        # Game loop (todo)
 
     def drawCourse(self) -> str: 
         '''
@@ -74,11 +73,7 @@ class App():
         Get player count from user
         '''
         player_count = getInput('How many players (or [q]uit)?', '23456', 'q')
-        if player_count == False:
-            input(self.exit_prompt)
-            exit()
-        else:
-            return int(player_count)
+        return int(player_count)
 
     def _chooseCourse(self) -> 'Course':
         '''
@@ -101,18 +96,14 @@ class App():
             print(str(i+1) + ' - ' + course)
         # Prompt user for a choice
         chosen_course = getInput('Choose one of the courses above:', choices, 'q')
-        if chosen_course == False:
-            input(self.exit_prompt)
-            exit()
-        else:
-            # Get chosen course name
-            course_name = list(courses.keys())[int(chosen_course)-1]
-            try:
-                # Create course object. Might fail if there is no version for the chosen player count
-                return Course(course_name, count_range)
-            except KeyError:
-                input(f'{course_name} does not have a version for this player count: {count_range}. Press Enter to try again...')
-                return self._chooseCourse()
+        # Get chosen course name
+        course_name = list(courses.keys())[int(chosen_course)-1]
+        try:
+            # Create course object. Might fail if there is no version for the chosen player count
+            return Course(course_name, count_range)
+        except KeyError:
+            input(f'{course_name} does not have a version for this player count: {count_range}. Press Enter to try again...')
+            return self._chooseCourse()
 
     def _addPlayers(self) -> None:
         '''
@@ -132,15 +123,11 @@ class App():
             # Get list of valid choices
             valid_choices = [str(i+1) for i in range(len(self.player_colors)) if i not in selected]
             selected_index = getInput(f'Player {len(selected)+1}, select a color above:', valid_choices, 'q')
-            if selected_index == False:
-                input(self.exit_prompt)
-                exit()
-            else:
-                # Add selected index to set (subtracting 1 to get actual index)
-                selected.add(int(selected_index)-1)
-                # Get color name and add player object of that color
-                selected_color = self.player_colors[int(selected_index)-1]
-                self.course.addPlayer(selected_color)
+            # Add selected index to set (subtracting 1 to get actual index)
+            selected.add(int(selected_index)-1)
+            # Get color name and add player object of that color
+            selected_color = self.player_colors[int(selected_index)-1]
+            self.course.addPlayer(selected_color)
 
     def setUp(self) -> None:
         '''
@@ -163,9 +150,6 @@ class App():
                 print(self.drawCourse())
                 print('Valid positions: ', ' | '.join(valid_start_pos))
                 start_pos = getInput(f'Player {player.color}, place your {rider.type}: ', valid_start_pos, 'q', color=player.color)
-                if start_pos == False:
-                    input(self.exit_prompt)
-                    exit()
                 self.course._placeRider(rider, int(start_pos))
                 # If bemove breakaway position selected, remove it from list.
                 # Otherwise when selecting an already taken position, riders will just be placed on the next available lane or space
@@ -214,27 +198,6 @@ class App():
 
         return riders_and_cards
 
-    def _checkEndGame(self) -> bool:
-        '''
-        Checks if at least all but one rider already finished the race
-        '''
-        if len(self.course.final_positions) >= len(self.course.riders)-1:
-            return True
-        else:
-            return False
-
-    def _checkFinish(self, rider: 'Rider') -> bool:
-        '''
-        Check if rider crossed the finish line.
-        '''
-        # Get rider space index
-        rider_location = rider.location[0]
-        if self.course.spaces[rider_location].type == 'finish':
-            return True
-        else:
-            return False
-
-
     def gameLoop(self) -> list:
         '''
         Main game loop.
@@ -271,7 +234,7 @@ class App():
 
             # Check if riders are finished already
             for rider in self.course.riders:
-                is_finished = self._checkFinish(rider)
+                is_finished = self.course._checkFinish(rider)
                 if is_finished:
                     # If finished, add to final_positions and remove from board
                     if rider not in [r[0] for r in self.course.final_positions]:
@@ -280,7 +243,7 @@ class App():
                     continue
             
             #Check if game over
-            game_ended = self._checkEndGame()
+            game_ended = self.course._checkEndGame()
             if game_ended:
                 input(_colorWrapper(f'The race is over on turn {self.turn}! Press Enter to see results... ', 'lightsalmon'))
                 # Build string representation of final positions
@@ -321,15 +284,12 @@ class App():
         selectable = {player.sprinteur: True, player.rouleur: True}
         # Check if rider has already finished or has already been selected in a previous round
         for rider in selectable.keys():
-            if self._checkFinish(rider) or riders_and_cards[rider]:
+            if self.course._checkFinish(rider) or riders_and_cards[rider]:
                 selectable[rider] = False
         
         # Only prompt player for input if both riders are selectable
         if sum(selectable.values()) == 2:
             rider_selected = getInput(f'Player {player.color}, select a rider: [s]printeur or [r]ouleur? ', 'sr', 'q', color=player.color)
-            if rider_selected == False:
-                input(self.exit_prompt)
-                exit()
             if rider_selected == 's':
                 return player.sprinteur
             else:
@@ -341,8 +301,6 @@ class App():
         else:
             return None
 
-        
-
     def selectCard(self, rider: 'Rider') -> int:
         # Generate printable list of cards in hand to play (convert -1 to E for exhaustion cards)
         hand = [str(i+1) + ': ' + _colorWrapper('E', rider.color) if card==-1 else str(i+1) + ': ' + _colorWrapper(str(card), rider.color) for i, card in enumerate(rider.hand)]
@@ -350,9 +308,6 @@ class App():
         # Get list of valid indexes
         valid_indexes = [str(i+1) for i in range(len(hand))]
         card_selected = getInput(f'Hey, {rider.color} {rider.type}, select one of the cards above to play: ', valid_indexes, 'q', color=rider.color)
-        if card_selected == False:
-            input(self.exit_prompt)
-            exit()
         return int(card_selected)-1
 
 def _colorWrapper(text: str, fg_color: str = '', bg_color: str = '') -> str:
@@ -383,7 +338,7 @@ def getInput(text: str, valids: Union[list, str], quit: str, color: str = 'light
     '''
     Convenience function to get input from user.
     Will repeat prompt until a valid input (or the string for 'quit') is entered
-    If quit, return False instead of the quit string
+    If 'quit', immediately exit the app after another prompt
     '''
     # Change color of prompt
     colored_input = _colorWrapper(text, color) + ' '
@@ -394,7 +349,8 @@ def getInput(text: str, valids: Union[list, str], quit: str, color: str = 'light
         if answer in valids:
             return answer
         elif answer == quit:
-            return False
+            input('Press Enter to quit...')
+            exit()
 
 def main():
     app = App()

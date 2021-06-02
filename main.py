@@ -56,9 +56,13 @@ class Tile():
         #self.vertices = TO DO (get from json file too)
 
 class Course():
+    '''
+    Main class that stores most of the game state and serves as a connection between Player, Space and Rider classes.
+    player_count is a string representation of the minimum and maximum number of players for the course.
+    '''
     def __init__(self, name: str, player_count: str) -> None:
         self.name = name
-        self.max_players = int(player_count[-1])
+        self.max_players = int(player_count[-1]) # E.g. player_count = '2-4' -> max players = 4
         # Load tiles
         with open(r'data/courses.json') as file:
             courses = tiles = json.load(file)
@@ -78,6 +82,9 @@ class Course():
         self.final_positions = []
 
     def addPlayer(self, color: str) -> 'Player':
+        '''
+        Instantiate new player object and add it to course
+        '''
         # Check if max players reached
         if len(self.players) == self.max_players:
             raise RuntimeError(f'Already at max players for course {self.name}: {self.max_players}')
@@ -236,15 +243,43 @@ class Course():
             if not self.spaces[space+1].lanes[lane_ahead]:
                 rider.drawExhaustion()
                 return True
+    
+    def _checkEndGame(self) -> bool:
+        '''
+        Checks if at least all but one rider already finished the race
+        '''
+        if len(self.final_positions) >= len(self.riders)-1:
+            return True
+        else:
+            return False
 
+    def _checkFinish(self, rider: 'Rider') -> bool:
+        '''
+        Check if rider crossed the finish line.
+        '''
+        # Get rider space index
+        rider_location = rider.location[0]
+        if self.spaces[rider_location].type == 'finish':
+            return True
+        else:
+            return False
 
 class Player():
+    '''
+    Player class. Stores the color and two Rider objects.
+    '''
     def __init__(self, color: str) -> None:
         self.color = color
         self.sprinteur = Rider(self, 'sprinteur')
         self.rouleur = Rider(self, 'rouleur')
 
 class Rider():
+    '''
+    Represents each individual rider.
+    Stores a reference to its owner player, its color and type.
+    Also tracks its current location on the board (an index of -1 == not yet on the board)
+    Also manages the rider's deck and hand
+    '''
     def __init__(self, player: 'Player', typ: str) -> None:
         self.player = player
         self.color = self.player.color
@@ -317,7 +352,11 @@ class Rider():
         '''
         self.discard_deck.append(-1)
 
+
 def main():
+    '''
+    Just for testing purposes
+    '''
     course = Course('La Classicissima', '2-4')
     p1 = course.addPlayer('red')
     p2 = course.addPlayer('blue')
