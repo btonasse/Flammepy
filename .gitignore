@@ -48,3 +48,6 @@ venv.bak/
 
 # Sublime
 *.sublime-workspace
+
+# todo
+flammetodo.txt
