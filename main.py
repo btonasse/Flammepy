@@ -24,6 +24,9 @@ class Space():
         self._setAttributes()
         # need to store relative coords as well
 
+    def __repr__(self) -> str:
+        return f"<Space '{self.type}' - tile '{self.tile}'>"
+    
     def _setAttributes(self) -> None:
         '''
         Change default attributes if special space
@@ -46,6 +49,7 @@ class Space():
 
 class Tile():
     def __init__(self, id: str) -> None:
+        self.id=id
         with open(r'data\tiles.json') as file:
             tiles = json.load(file)
         
@@ -53,7 +57,8 @@ class Tile():
         for space in tiles[id]:
             self.spaces.append(Space(self, space[0], space[1]))
 
-        #self.vertices = TO DO (get from json file too)
+    def __repr__(self) -> str:
+        return f"<Tile {self.id}>"
 
 class Course():
     '''
@@ -80,6 +85,9 @@ class Course():
 
         # Initialize final arrival positions
         self.final_positions = []
+
+    def __repr__(self) -> str:
+        return f"<Course '{self.name}' - max {self.max_players} players>"
 
     def addPlayer(self, color: str) -> 'Player':
         '''
@@ -272,6 +280,9 @@ class Player():
         self.color = color
         self.sprinteur = Rider(self, 'sprinteur')
         self.rouleur = Rider(self, 'rouleur')
+    
+    def __repr__(self) -> str:
+        return f"<Player {self.color}>"
 
 class Rider():
     '''
@@ -290,7 +301,9 @@ class Rider():
         self.hand = []
         self.drawCards()
         
-    
+    def __repr__(self) -> str:
+        return f"<Rider '{self.color} {self.type}'>"
+
     def _buildDeck(self) -> list:
         '''
         Build rider deck and shuffle it.
@@ -363,25 +376,13 @@ def main():
     course._placeRider(p1.sprinteur, 3)
     course._placeRider(p1.rouleur, 3)
     course._placeRider(p2.sprinteur, 3)
+    course._placeRider(p2.rouleur, 3)
 
-    for i, s in enumerate(course.spaces):
-        print(i, s.type, s.lanes, p1.sprinteur in s.lanes)
-        if p1.sprinteur in s.lanes:
-            break
-
-    course.moveRider(p1.sprinteur, 3)
-    course._applySlip()
-    course._applyExhaustion()
-    print('')
-    for i, s in enumerate(course.spaces):
-        print(i, s.type, s.lanes, p1.sprinteur in s.lanes)
-        if p1.sprinteur in s.lanes:
-            break
     
-    print('')
-    for i, rider in enumerate(course.riders):
-        print(i, rider, rider.color, rider.type, rider.location, rider.hand)
     
+    print(course.spaces[0])
+    print(p1)
+    print(p1.sprinteur)
 
 
 
